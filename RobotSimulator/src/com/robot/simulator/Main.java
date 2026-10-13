@@ -1,6 +1,8 @@
 package com.robot.simulator;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -17,6 +19,22 @@ public class Main {
 			
 			Socket phoneSocket = serverSocket.accept();
 			System.out.println("Success! A phone connected to the server.");
+			
+			BufferedReader reader = new BufferedReader(
+					new InputStreamReader(phoneSocket.getInputStream())
+					);
+			
+			System.out.println("Listening for incoming commands from the phone...");
+            
+            String incomingMessage;
+            
+            while((incomingMessage = reader.readLine()) != null) 
+            {
+            	System.out.println("Received from phone: " + incomingMessage);
+            }
+            
+            phoneSocket.close();
+            serverSocket.close();
 		}
 		catch(IOException e){
 			System.out.println("An error occurred: " + e.getMessage());
