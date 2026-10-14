@@ -27,5 +27,5 @@ data class RobotEntity(
     val robotNumber: String,
     val status: String,
     val batteryLevel: Int,
-    val zoneId: Long? = null 
+    val zoneId: Long? = null
 )
