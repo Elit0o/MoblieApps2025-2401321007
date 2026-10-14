@@ -33,5 +33,5 @@ data class TaskEntity(
     val waypointId: Long,
     val status: String,
     val priority: Int,
-    val createdAt: Long    
+    val createdAt: Long
 )
