@@ -14,7 +14,7 @@ class BotOpsRepository(
     private val zoneDao: ZoneDao,
     private val waypointDao: WaypointDao,
     private val robotDao: RobotDao,
-    private val taskDao: TaskDao   
+    private val taskDao: TaskDao
 ) {
 
     suspend fun insertZone(zone: ZoneEntity): Long = zoneDao.insertZone(zone)
