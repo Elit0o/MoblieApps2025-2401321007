@@ -4,10 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.botops.app.data.repository.BotOpsRepository
-import com.botops.app.data.entities.RobotEntity
-import com.botops.app.data.entities.TaskEntity
-import com.botops.app.data.entities.WaypointEntity
-import com.botops.app.data.entities.ZoneEntity
+import com.botops.app.data.entities.*
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -21,10 +18,19 @@ class BotOpsViewModel(private val repository: BotOpsRepository) : ViewModel() {
     val waypoints: StateFlow<List<WaypointEntity>> = repository.allWaypoints
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val waypointsWithZone: StateFlow<List<WaypointWithZone>> = repository.waypointsWithZone
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val robots: StateFlow<List<RobotEntity>> = repository.allRobots
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val robotsWithZone: StateFlow<List<RobotWithZone>> = repository.robotsWithZone
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val tasks: StateFlow<List<TaskEntity>> = repository.allTasks
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val tasksWithDetails: StateFlow<List<TaskWithDetails>> = repository.tasksWithDetails
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun insertZone(name: String, description: String) {

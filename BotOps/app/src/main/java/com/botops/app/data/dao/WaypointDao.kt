@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.botops.app.data.entities.WaypointEntity
+import com.botops.app.data.entities.WaypointWithZone
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,6 +15,14 @@ interface WaypointDao {
 
     @Query("SELECT * FROM waypoints ORDER BY name COLLATE NOCASE ASC")
     fun observeAllWaypoints(): Flow<List<WaypointEntity>>
+
+    @Query("""
+        SELECT waypoints.*, zones.name AS zoneName 
+        FROM waypoints 
+        LEFT JOIN zones ON waypoints.zoneId = zones.id 
+        ORDER BY waypoints.name COLLATE NOCASE ASC
+    """)
+    fun observeWaypointsWithZone(): Flow<List<WaypointWithZone>>
 
     @Query("SELECT * FROM waypoints WHERE zoneId = :zoneId ORDER BY name COLLATE NOCASE ASC")
     fun observeWaypointsByZone(zoneId: Long): Flow<List<WaypointEntity>>

@@ -10,10 +10,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.botops.app.R
 import com.botops.app.data.entities.WaypointEntity
+import com.botops.app.data.entities.WaypointWithZone
 
 class WaypointsAdapter(
     private val onDeleteClick: (WaypointEntity) -> Unit
-) : ListAdapter<WaypointEntity, WaypointsAdapter.WaypointViewHolder>(DiffCallback()) {
+) : ListAdapter<WaypointWithZone, WaypointsAdapter.WaypointViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WaypointViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -27,14 +28,15 @@ class WaypointsAdapter(
 
     inner class WaypointViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textWaypointName: TextView = itemView.findViewById(R.id.textWaypointName)
-        private val textWaypointCords: TextView = itemView.findViewById(R.id.textWaypointCoords)
+        private val textWaypointCoords: TextView = itemView.findViewById(R.id.textWaypointCoords)
         private val textWaypointZone: TextView = itemView.findViewById(R.id.textWaypointZone)
         private val buttonDeleteWaypoint: ImageButton = itemView.findViewById(R.id.buttonDeleteWaypoint)
 
-        fun bind(waypoint: WaypointEntity) {
+        fun bind(item: WaypointWithZone) {
+            val waypoint = item.waypoint
             textWaypointName.text = waypoint.name
-            textWaypointCords.text = "X: ${waypoint.xCord}, Y: ${waypoint.yCord}"
-            textWaypointZone.text = "Zone ID: ${waypoint.zoneId}"
+            textWaypointCoords.text = "X: ${waypoint.xCord}, Y: ${waypoint.yCord}"
+            textWaypointZone.text = "Zone: ${item.zoneName ?: "None"}"
 
             buttonDeleteWaypoint.setOnClickListener {
                 onDeleteClick(waypoint)
@@ -42,12 +44,12 @@ class WaypointsAdapter(
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<WaypointEntity>() {
-        override fun areItemsTheSame(oldItem: WaypointEntity, newItem: WaypointEntity): Boolean {
-            return oldItem.id == newItem.id
+    class DiffCallback : DiffUtil.ItemCallback<WaypointWithZone>() {
+        override fun areItemsTheSame(oldItem: WaypointWithZone, newItem: WaypointWithZone): Boolean {
+            return oldItem.waypoint.id == newItem.waypoint.id
         }
 
-        override fun areContentsTheSame(oldItem: WaypointEntity, newItem: WaypointEntity): Boolean {
+        override fun areContentsTheSame(oldItem: WaypointWithZone, newItem: WaypointWithZone): Boolean {
             return oldItem == newItem
         }
     }

@@ -5,4 +5,9 @@
     <string name="add_waypoint">Add waypoint</string>
     <string name="delete_task">Delete task</string>
     <string name="add_task">Add task</string>
+
+    <string name="menu_zones">Zones</string>
+    <string name="menu_robots">Robots</string>
+    <string name="menu_waypoints">Waypoints</string>
+    <string name="menu_tasks">Tasks</string>
 </resources>

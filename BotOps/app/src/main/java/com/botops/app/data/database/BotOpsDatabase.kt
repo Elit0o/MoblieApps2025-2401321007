@@ -40,7 +40,7 @@ abstract class BotOpsDatabase : RoomDatabase() {
                     context.applicationContext,
                     BotOpsDatabase::class.java,
                     "botops_database.db"
-                ).build()
+                ).allowMainThreadQueries().build()
                 INSTANCE = instance
                 instance
             }

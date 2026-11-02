@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/zonesFragment">
+
+    <fragment
+        android:id="@+id/zonesFragment"
+        android:name="com.botops.app.ui.zones.ZonesFragment"
+        android:label="Zones"
+        tools:layout="@layout/fragment_zones" />
+
+    <fragment
+        android:id="@+id/robotsFragment"
+        android:name="com.botops.app.ui.robots.RobotsFragment"
+        android:label="Robots"
+        tools:layout="@layout/fragment_robots" />
+
+    <fragment
+        android:id="@+id/waypointsFragment"
+        android:name="com.botops.app.ui.waypoints.WaypointsFragment"
+        android:label="Waypoints"
+        tools:layout="@layout/fragment_waypoints" />
+
+    <fragment
+        android:id="@+id/tasksFragment"
+        android:name="com.botops.app.ui.tasks.TasksFragment"
+        android:label="Tasks"
+        tools:layout="@layout/fragment_tasks" />
+
+</navigation>

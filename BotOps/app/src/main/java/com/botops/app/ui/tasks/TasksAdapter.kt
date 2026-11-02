@@ -10,10 +10,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.botops.app.R
 import com.botops.app.data.entities.TaskEntity
+import com.botops.app.data.entities.TaskWithDetails
 
 class TasksAdapter(
     private val onDeleteClick: (TaskEntity) -> Unit
-) : ListAdapter<TaskEntity, TasksAdapter.TaskViewHolder>(DiffCallback()) {
+) : ListAdapter<TaskWithDetails, TasksAdapter.TaskViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -32,10 +33,11 @@ class TasksAdapter(
         private val textTaskPriority: TextView = itemView.findViewById(R.id.textTaskPriority)
         private val buttonDeleteTask: ImageButton = itemView.findViewById(R.id.buttonDeleteTask)
 
-        fun bind(task: TaskEntity) {
+        fun bind(item: TaskWithDetails) {
+            val task = item.task
             textTaskStatus.text = "Status: ${task.status}"
-            textTaskRobot.text = "Robot ID: ${task.robotId}"
-            textTaskWaypoint.text = "Waypoint ID: ${task.waypointId}"
+            textTaskRobot.text = "Robot: ${item.robotName ?: "Unknown"}"
+            textTaskWaypoint.text = "Waypoint: ${item.waypointName ?: "Unknown"}"
             textTaskPriority.text = "Priority: ${task.priority}"
 
             buttonDeleteTask.setOnClickListener {
@@ -44,12 +46,12 @@ class TasksAdapter(
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<TaskEntity>() {
-        override fun areItemsTheSame(oldItem: TaskEntity, newItem: TaskEntity): Boolean {
-            return oldItem.id == newItem.id
+    class DiffCallback : DiffUtil.ItemCallback<TaskWithDetails>() {
+        override fun areItemsTheSame(oldItem: TaskWithDetails, newItem: TaskWithDetails): Boolean {
+            return oldItem.task.id == newItem.task.id
         }
 
-        override fun areContentsTheSame(oldItem: TaskEntity, newItem: TaskEntity): Boolean {
+        override fun areContentsTheSame(oldItem: TaskWithDetails, newItem: TaskWithDetails): Boolean {
             return oldItem == newItem
         }
     }

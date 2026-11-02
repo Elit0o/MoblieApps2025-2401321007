@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/inputWaypointName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Waypoint Name (e.g. Charging Station)"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/inputWaypointX"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="X Coordinate (e.g. 10.5)"
+        android:inputType="numberDecimal|numberSigned" />
+
+    <EditText
+        android:id="@+id/inputWaypointY"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Y Coordinate (e.g. 20.0)"
+        android:inputType="numberDecimal|numberSigned" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Select Zone:"
+        android:textStyle="bold" />
+
+    <Spinner
+        android:id="@+id/spinnerZone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/inputRobotName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Robot Name (e.g. Atlas)"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/inputRobotNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="Robot Number (e.g. R-101)"
+        android:inputType="text" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Select Zone:"
+        android:textStyle="bold" />
+
+    <Spinner
+        android:id="@+id/spinnerZone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" />
+
+</LinearLayout>
