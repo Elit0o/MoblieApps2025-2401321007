@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170815198554",
+    "project_id": "botops-33fad",
+    "storage_bucket": "botops-33fad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170815198554:android:af5ae1c2e89cd48e264f63",
+        "android_client_info": {
+          "package_name": "com.botops.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkvmsmZSnbK-lhX0Aiz-hFREZl0AEdMLc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

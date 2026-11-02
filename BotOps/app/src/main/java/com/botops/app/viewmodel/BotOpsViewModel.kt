@@ -41,7 +41,7 @@ class BotOpsViewModel(private val repository: BotOpsRepository) : ViewModel() {
 
     fun insertWaypoint(name: String, xCord: Double, yCord: Double, zoneId: Long) {
         viewModelScope.launch {
-            repository.insertWaypoint(WaypointEntity(name = name, xCord = xCord, yCord = yC ord, zoneId = zoneId))
+            repository.insertWaypoint(WaypointEntity(name = name, xCord = xCord, yCord = yCord, zoneId = zoneId))
         }
     }
 
