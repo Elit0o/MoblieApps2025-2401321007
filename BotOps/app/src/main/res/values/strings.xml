@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">BotOps</string>
+    <string name="delete_zone">Delete zone</string>
+    <string name="delete_waypoint">Delete waypoint</string>
+    <string name="add_waypoint">Add waypoint</string>
+    <string name="delete_task">Delete task</string>
+    <string name="add_task">Add task</string>
 </resources>
