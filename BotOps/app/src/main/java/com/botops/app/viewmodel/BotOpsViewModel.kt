@@ -3,8 +3,8 @@ package com.botops.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.botops.app.data.repository.BotOpsRepository
 import com.botops.app.data.entities.*
+import com.botops.app.data.repository.BotOpsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -39,6 +39,12 @@ class BotOpsViewModel(private val repository: BotOpsRepository) : ViewModel() {
         }
     }
 
+    fun updateZone(id: Long, name: String, description: String) {
+        viewModelScope.launch {
+            repository.updateZone(ZoneEntity(id = id, name = name, description = description))
+        }
+    }
+
     fun deleteZone(id: Long) {
         viewModelScope.launch {
             repository.deleteZone(id)
@@ -48,6 +54,12 @@ class BotOpsViewModel(private val repository: BotOpsRepository) : ViewModel() {
     fun insertWaypoint(name: String, xCord: Double, yCord: Double, zoneId: Long) {
         viewModelScope.launch {
             repository.insertWaypoint(WaypointEntity(name = name, xCord = xCord, yCord = yCord, zoneId = zoneId))
+        }
+    }
+
+    fun updateWaypoint(id: Long, name: String, xCord: Double, yCord: Double, zoneId: Long) {
+        viewModelScope.launch {
+            repository.updateWaypoint(WaypointEntity(id = id, name = name, xCord = xCord, yCord = yCord, zoneId = zoneId))
         }
     }
 
@@ -65,17 +77,68 @@ class BotOpsViewModel(private val repository: BotOpsRepository) : ViewModel() {
         }
     }
 
+    fun updateRobot(id: Long, name: String, number: String, status: String, battery: Int, zoneId: Long?) {
+        viewModelScope.launch {
+            repository.updateRobot(
+                RobotEntity(id = id, robotName = name, robotNumber = number, status = status, batteryLevel = battery, zoneId = zoneId)
+            )
+        }
+    }
+
     fun deleteRobot(id: Long) {
         viewModelScope.launch {
             repository.deleteRobot(id)
         }
     }
 
-    fun insertTask(robotId: Long, waypointId: Long, status: String, priority: Int) {
+    fun insertTask(title: String, robotId: Long, waypointId: Long, priority: Int) {
         viewModelScope.launch {
             repository.insertTask(
-                TaskEntity(robotId = robotId, waypointId = waypointId, status = status, priority = priority, createdAt = System.currentTimeMillis())
+                TaskEntity(
+                    title = title,
+                    robotId = robotId,
+                    waypointId = waypointId,
+                    status = "Pending",
+                    priority = priority,
+                    progress = 0,
+                    createdAt = System.currentTimeMillis()
+                )
             )
+        }
+    }
+
+    fun updateTask(id: Long, title: String, robotId: Long, waypointId: Long, status: String, priority: Int, progress: Int, createdAt: Long) {
+        viewModelScope.launch {
+            repository.updateTask(
+                TaskEntity(
+                    id = id,
+                    title = title,
+                    robotId = robotId,
+                    waypointId = waypointId,
+                    status = status,
+                    priority = priority,
+                    progress = progress,
+                    createdAt = createdAt
+                )
+            )
+        }
+    }
+
+    fun markTaskAsCompleted(taskId: Long) {
+        viewModelScope.launch {
+            repository.markTaskAsCompleted(taskId)
+        }
+    }
+
+    fun pauseTask(taskId: Long) {
+        viewModelScope.launch {
+            repository.pauseTask(taskId)
+        }
+    }
+
+    fun cancelTask(taskId: Long) {
+        viewModelScope.launch {
+            repository.cancelTask(taskId)
         }
     }
 

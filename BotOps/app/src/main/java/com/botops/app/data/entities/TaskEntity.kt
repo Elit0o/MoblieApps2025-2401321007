@@ -29,9 +29,11 @@ import androidx.room.PrimaryKey
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val title: String,
     val robotId: Long,
     val waypointId: Long,
     val status: String,
     val priority: Int,
+    val progress: Int = 0, // 0 to 100
     val createdAt: Long
 )

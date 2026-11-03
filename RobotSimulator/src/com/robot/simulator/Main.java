@@ -8,37 +8,35 @@ import java.net.Socket;
 
 public class Main {
 
-	public static void main(String[] args) {
-		int portNumber = 8080;
-		
-		System.out.println("Starting robot server...");
-		
-		try {
-			ServerSocket serverSocket = new ServerSocket(portNumber);
-			System.out.println("Server is listening on port " + portNumber);
-			
-			Socket phoneSocket = serverSocket.accept();
-			System.out.println("Success! A phone connected to the server.");
-			
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(phoneSocket.getInputStream())
-					);
-			
-			System.out.println("Listening for incoming commands from the phone...");
+    public static void main(String[] args) {
+        int portNumber = 8080;
+        
+        System.out.println("Starting robot server...");
+        
+        try {
+            ServerSocket serverSocket = new ServerSocket(portNumber);
+            System.out.println("Server is listening on port " + portNumber);
             
-            String incomingMessage;
-            
-            while((incomingMessage = reader.readLine()) != null) 
-            {
-            	System.out.println("Received from phone: " + incomingMessage);
+            while (true) {
+                System.out.println("Waiting for phone connection...");
+                Socket phoneSocket = serverSocket.accept();
+                System.out.println("Success! A phone connected to the server.");
+                
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(phoneSocket.getInputStream())
+                );
+                
+                String incomingMessage;
+                while ((incomingMessage = reader.readLine()) != null) {
+                    System.out.println("Received from phone: " + incomingMessage);
+                }
+                
+                phoneSocket.close();
+                System.out.println("Phone disconnected. Ready for next command.\n");
             }
             
-            phoneSocket.close();
-            serverSocket.close();
-		}
-		catch(IOException e){
-			System.out.println("An error occurred: " + e.getMessage());
-		}
-	}
-
+        } catch (IOException e) {
+            System.out.println("An error occurred: " + e.getMessage());
+        }
+    }
 }

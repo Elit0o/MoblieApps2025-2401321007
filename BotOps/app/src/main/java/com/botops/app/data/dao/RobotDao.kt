@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.botops.app.data.entities.RobotEntity
 import com.botops.app.data.entities.RobotWithZone
 import kotlinx.coroutines.flow.Flow
@@ -13,8 +14,14 @@ interface RobotDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRobot(robot: RobotEntity): Long
 
+    @Update
+    suspend fun updateRobot(robot: RobotEntity)
+
     @Query("SELECT * FROM robots ORDER BY robotName COLLATE NOCASE ASC")
     fun observeAllRobots(): Flow<List<RobotEntity>>
+
+    @Query("SELECT * FROM robots")
+    suspend fun getAllRobotsSync(): List<RobotEntity>
 
     @Query("""
         SELECT robots.*, zones.name AS zoneName 

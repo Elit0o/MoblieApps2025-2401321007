@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.botops.app.data.entities.WaypointEntity
 import com.botops.app.data.entities.WaypointWithZone
 import kotlinx.coroutines.flow.Flow
@@ -13,8 +14,14 @@ interface WaypointDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWaypoint(waypoint: WaypointEntity): Long
 
+    @Update
+    suspend fun updateWaypoint(waypoint: WaypointEntity)
+
     @Query("SELECT * FROM waypoints ORDER BY name COLLATE NOCASE ASC")
     fun observeAllWaypoints(): Flow<List<WaypointEntity>>
+
+    @Query("SELECT * FROM waypoints")
+    suspend fun getAllWaypointsSync(): List<WaypointEntity>
 
     @Query("""
         SELECT waypoints.*, zones.name AS zoneName 

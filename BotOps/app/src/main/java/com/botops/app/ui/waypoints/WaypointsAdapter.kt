@@ -13,6 +13,7 @@ import com.botops.app.data.entities.WaypointEntity
 import com.botops.app.data.entities.WaypointWithZone
 
 class WaypointsAdapter(
+    private val onEditClick: (WaypointWithZone) -> Unit,
     private val onDeleteClick: (WaypointEntity) -> Unit
 ) : ListAdapter<WaypointWithZone, WaypointsAdapter.WaypointViewHolder>(DiffCallback()) {
 
@@ -30,6 +31,7 @@ class WaypointsAdapter(
         private val textWaypointName: TextView = itemView.findViewById(R.id.textWaypointName)
         private val textWaypointCoords: TextView = itemView.findViewById(R.id.textWaypointCoords)
         private val textWaypointZone: TextView = itemView.findViewById(R.id.textWaypointZone)
+        private val buttonEditWaypoint: ImageButton = itemView.findViewById(R.id.buttonEditWaypoint)
         private val buttonDeleteWaypoint: ImageButton = itemView.findViewById(R.id.buttonDeleteWaypoint)
 
         fun bind(item: WaypointWithZone) {
@@ -38,6 +40,9 @@ class WaypointsAdapter(
             textWaypointCoords.text = "X: ${waypoint.xCord}, Y: ${waypoint.yCord}"
             textWaypointZone.text = "Zone: ${item.zoneName ?: "None"}"
 
+            buttonEditWaypoint.setOnClickListener {
+                onEditClick(item)
+            }
             buttonDeleteWaypoint.setOnClickListener {
                 onDeleteClick(waypoint)
             }

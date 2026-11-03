@@ -9,6 +9,7 @@ import com.botops.app.data.entities.ZoneEntity
 import com.botops.app.databinding.ItemZoneBinding
 
 class ZonesAdapter(
+    private val onEditClick: (ZoneEntity) -> Unit,
     private val onDeleteClick: (ZoneEntity) -> Unit
 ) : ListAdapter<ZoneEntity, ZonesAdapter.ZoneViewHolder>(ZoneDiffCallback()) {
 
@@ -17,6 +18,9 @@ class ZonesAdapter(
             binding.textZoneName.text = zone.name
             binding.textZoneDescription.text = zone.description
 
+            binding.buttonEditZone.setOnClickListener {
+                onEditClick(zone)
+            }
             binding.buttonDeleteZone.setOnClickListener {
                 onDeleteClick(zone)
             }

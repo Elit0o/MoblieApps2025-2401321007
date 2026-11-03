@@ -20,7 +20,7 @@ import com.botops.app.data.entities.ZoneEntity
         RobotEntity::class,
         TaskEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class BotOpsDatabase : RoomDatabase() {
@@ -40,7 +40,9 @@ abstract class BotOpsDatabase : RoomDatabase() {
                     context.applicationContext,
                     BotOpsDatabase::class.java,
                     "botops_database.db"
-                ).allowMainThreadQueries().build()
+                ).fallbackToDestructiveMigration(true)
+                .allowMainThreadQueries()
+                .build()
                 INSTANCE = instance
                 instance
             }

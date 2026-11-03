@@ -10,6 +10,7 @@ import com.botops.app.data.entities.RobotWithZone
 import com.botops.app.databinding.ItemRobotBinding
 
 class RobotsAdapter(
+    private val onEditClick: (RobotWithZone) -> Unit,
     private val onDeleteClick: (RobotEntity) -> Unit
 ) : ListAdapter<RobotWithZone, RobotsAdapter.RobotViewHolder>(RobotDiffCallback()) {
 
@@ -21,6 +22,9 @@ class RobotsAdapter(
             binding.textRobotStatus.text = "Status: ${robot.status} | Zone: ${item.zoneName ?: "None"}"
             binding.textRobotBattery.text = "Battery: ${robot.batteryLevel}%"
 
+            binding.buttonEditRobot.setOnClickListener {
+                onEditClick(item)
+            }
             binding.buttonDeleteRobot.setOnClickListener {
                 onDeleteClick(robot)
             }
