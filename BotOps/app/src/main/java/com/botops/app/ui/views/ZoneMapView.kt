@@ -24,23 +24,23 @@ class ZoneMapView @JvmOverloads constructor(
     }
 
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.DKGRAY
+        color = Color.parseColor("#1976D2")
         strokeWidth = 4f
         style = Paint.Style.STROKE
     }
 
     private val selectedPointPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E91E63") // Vibrant Pink/Red for selection
+        color = Color.parseColor("#E91E63")
         style = Paint.Style.FILL
     }
 
     private val selectedPointOuterPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#4DE91E63") // Semi-transparent ring
+        color = Color.parseColor("#4DE91E63")
         style = Paint.Style.FILL
     }
 
     private val existingWaypointPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#2196F3") // Blue for existing waypoints
+        color = Color.parseColor("#2196F3")
         style = Paint.Style.FILL
     }
 
@@ -50,8 +50,9 @@ class ZoneMapView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    // Grid bounds default: 0.0 to 100.0 x 0.0 to 100.0
+    var minCoordX: Double = 0.0
     var maxCoordX: Double = 100.0
+    var minCoordY: Double = 0.0
     var maxCoordY: Double = 100.0
 
     private var selectedPoint: PointF? = null
@@ -59,16 +60,44 @@ class ZoneMapView @JvmOverloads constructor(
 
     var onCoordinateSelectedListener: ((Double, Double) -> Unit)? = null
 
+    fun setZoneBounds(minX: Double, maxX: Double, minY: Double, maxY: Double) {
+        this.minCoordX = minX
+        this.maxCoordX = maxX.coerceAtLeast(minX + 1.0)
+        this.minCoordY = minY
+        this.maxCoordY = maxY.coerceAtLeast(minY + 1.0)
+        invalidate()
+    }
+
     fun setExistingWaypoints(waypoints: List<WaypointEntity>) {
         this.existingWaypoints = waypoints
         invalidate()
     }
 
     fun setSelectedCoordinate(x: Double, y: Double) {
-        val px = ((x / maxCoordX) * width).toFloat()
-        val py = ((1.0 - (y / maxCoordY)) * height).toFloat()
+        val w = width.toFloat()
+        val h = height.toFloat()
+        if (w <= 0 || h <= 0) return
+
+        val px = mapX(x, w)
+        val py = mapY(y, h)
         selectedPoint = PointF(px, py)
         invalidate()
+    }
+
+    private fun mapX(x: Double, w: Float): Float {
+        return (((x - minCoordX) / (maxCoordX - minCoordX)) * w).toFloat().coerceIn(0f, w)
+    }
+
+    private fun mapY(y: Double, h: Float): Float {
+        return ((1.0 - ((y - minCoordY) / (maxCoordY - minCoordY))) * h).toFloat().coerceIn(0f, h)
+    }
+
+    private fun unmapX(px: Float, w: Float): Double {
+        return minCoordX + (px / w) * (maxCoordX - minCoordX)
+    }
+
+    private fun unmapY(py: Float, h: Float): Double {
+        return minCoordY + (1.0 - (py / h)) * (maxCoordY - minCoordY)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -79,7 +108,6 @@ class ZoneMapView @JvmOverloads constructor(
 
         if (w <= 0 || h <= 0) return
 
-        // Draw background grid (10x10 grid lines)
         val gridCols = 10
         val gridRows = 10
         val colWidth = w / gridCols
@@ -94,25 +122,21 @@ class ZoneMapView @JvmOverloads constructor(
             canvas.drawLine(0f, y, w, y, gridPaint)
         }
 
-        // Outer border
         canvas.drawRect(0f, 0f, w, h, borderPaint)
 
-        // Draw existing waypoints
         for (wp in existingWaypoints) {
-            val wx = ((wp.xCord / maxCoordX) * w).toFloat()
-            val wy = ((1.0 - (wp.yCord / maxCoordY)) * h).toFloat()
+            val wx = mapX(wp.xCord, w)
+            val wy = mapY(wp.yCord, h)
             canvas.drawCircle(wx, wy, 12f, existingWaypointPaint)
             canvas.drawText(wp.name, wx + 16f, wy + 8f, textPaint)
         }
 
-        // Draw selected coordinate marker if present
         selectedPoint?.let { pt ->
             canvas.drawCircle(pt.x, pt.y, 30f, selectedPointOuterPaint)
             canvas.drawCircle(pt.x, pt.y, 14f, selectedPointPaint)
 
-            // Calculate coordinate values
-            val coordX = ((pt.x / w) * maxCoordX).roundTo1Decimal()
-            val coordY = ((1.0 - (pt.y / h)) * maxCoordY).roundTo1Decimal()
+            val coordX = unmapX(pt.x, w).roundTo1Decimal()
+            val coordY = unmapY(pt.y, h).roundTo1Decimal()
 
             val text = "Selected: ($coordX, $coordY)"
             canvas.drawText(text, (pt.x + 20f).coerceAtMost(w - 220f), (pt.y - 20f).coerceAtLeast(40f), textPaint)
@@ -127,8 +151,8 @@ class ZoneMapView @JvmOverloads constructor(
             selectedPoint = PointF(px, py)
             invalidate()
 
-            val coordX = ((px / width.toFloat()) * maxCoordX).roundTo1Decimal()
-            val coordY = ((1.0 - (py / height.toFloat())) * maxCoordY).roundTo1Decimal()
+            val coordX = unmapX(px, width.toFloat()).roundTo1Decimal()
+            val coordY = unmapY(py, height.toFloat()).roundTo1Decimal()
 
             onCoordinateSelectedListener?.invoke(coordX, coordY)
             return true

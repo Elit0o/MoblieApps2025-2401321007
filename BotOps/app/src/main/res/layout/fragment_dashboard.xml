@@ -134,7 +134,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Active / Pending Tasks"
+                        android:text="Active / Pending"
                         android:textColor="#616161"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -192,11 +192,48 @@
 
         </GridLayout>
 
+        <!-- Active Fleet Operations Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="6dp"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="3dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Active Fleet Operations &amp; Live Tasks"
+                    android:textColor="#212121"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textActiveOperationsSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="No robots currently executing tasks."
+                    android:textColor="#555555"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Quick Navigation Header -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:text="Quick Actions"
             android:textColor="#212121"
             android:textSize="18sp"
@@ -234,6 +271,15 @@
                 android:layout_marginBottom="8dp"
                 android:text="Map Waypoints &amp; Zones"
                 app:icon="@android:drawable/ic_menu_mapmode"
+                app:iconGravity="textStart" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonGoToLiveMap"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="8dp"
+                android:text="Open Fleet Live Map"
+                app:icon="@android:drawable/ic_menu_mylocation"
                 app:iconGravity="textStart" />
 
         </LinearLayout>

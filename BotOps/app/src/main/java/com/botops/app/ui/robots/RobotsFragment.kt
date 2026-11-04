@@ -18,7 +18,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.botops.app.R
-import com.botops.app.data.database.BotOpsDatabase
 import com.botops.app.data.entities.RobotWithZone
 import com.botops.app.data.entities.ZoneEntity
 import com.botops.app.data.repository.BotOpsRepository
@@ -31,14 +30,7 @@ import kotlinx.coroutines.launch
 class RobotsFragment : Fragment(R.layout.fragment_robots) {
 
     private val viewModel: BotOpsViewModel by activityViewModels {
-        val database = BotOpsDatabase.getInstance(requireContext())
-        val repository = BotOpsRepository(
-            database.zoneDao(),
-            database.waypointDao(),
-            database.robotDao(),
-            database.taskDao(),
-            requireContext().applicationContext
-        )
+        val repository = BotOpsRepository.getInstance(requireContext())
         BotOpsViewModel.Factory(repository)
     }
 
@@ -75,11 +67,10 @@ class RobotsFragment : Fragment(R.layout.fragment_robots) {
     }
 
     private fun filterAndSubmitRobots() {
-        val filtered = if (selectedZoneFilterIndex == 0 || cachedZones.isEmpty()) {
-            cachedRobotsWithZone
-        } else {
+        var filtered = cachedRobotsWithZone
+        if (selectedZoneFilterIndex > 0 && cachedZones.isNotEmpty()) {
             val selectedZone = cachedZones.getOrNull(selectedZoneFilterIndex - 1)
-            cachedRobotsWithZone.filter { it.robot.zoneId == selectedZone?.id }
+            filtered = filtered.filter { it.robot.zoneId == selectedZone?.id }
         }
         robotsAdapter.submitList(filtered)
     }
@@ -90,17 +81,17 @@ class RobotsFragment : Fragment(R.layout.fragment_robots) {
         val inputNumber = dialogView.findViewById<EditText>(R.id.inputRobotNumber)
         val spinnerStatus = dialogView.findViewById<Spinner>(R.id.spinnerRobotStatus)
         val sliderBattery = dialogView.findViewById<Slider>(R.id.sliderBattery)
-        val textBatteryLabel = dialogView.findViewById<TextView>(R.id.textBatteryLabel)
+        val textBatteryVal = dialogView.findViewById<TextView>(R.id.textBatteryLabel)
         val spinnerZone = dialogView.findViewById<Spinner>(R.id.spinnerZone)
 
-        val statusOptions = listOf("Idle", "Active", "Charging", "Maintenance")
-        spinnerStatus.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, statusOptions)
+        val statuses = listOf("Idle", "Active", "Charging", "Maintenance")
+        spinnerStatus.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, statuses)
 
         sliderBattery.addOnChangeListener { _, value, _ ->
-            textBatteryLabel.text = "Battery Level: ${value.toInt()}%"
+            textBatteryVal.text = "Battery Level: ${value.toInt()}%"
         }
 
-        val zoneNames = listOf("None") + cachedZones.map { it.name }
+        val zoneNames = listOf("No Zone (Unassigned)") + cachedZones.map { it.name }
         spinnerZone.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, zoneNames)
 
         AlertDialog.Builder(requireContext())
@@ -109,16 +100,16 @@ class RobotsFragment : Fragment(R.layout.fragment_robots) {
             .setPositiveButton("Add") { _, _ ->
                 val name = inputName.text.toString().trim()
                 val number = inputNumber.text.toString().trim()
-                val selectedStatus = statusOptions[spinnerStatus.selectedItemPosition]
+                val status = statuses[spinnerStatus.selectedItemPosition]
                 val battery = sliderBattery.value.toInt()
-                val selectedZoneIndex = spinnerZone.selectedItemPosition
-                val zoneId = if (selectedZoneIndex > 0) cachedZones[selectedZoneIndex - 1].id else null
+                val zonePos = spinnerZone.selectedItemPosition
+                val zoneId = if (zonePos > 0) cachedZones[zonePos - 1].id else null
 
                 if (name.isNotEmpty() && number.isNotEmpty()) {
-                    viewModel.insertRobot(name, number, selectedStatus, battery, zoneId)
+                    viewModel.insertRobot(name, number, status, battery, zoneId)
                     Toast.makeText(requireContext(), "Robot added successfully", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireContext(), "Name and Number are required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Name and number cannot be empty", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -132,32 +123,23 @@ class RobotsFragment : Fragment(R.layout.fragment_robots) {
         val inputNumber = dialogView.findViewById<EditText>(R.id.inputRobotNumber)
         val spinnerStatus = dialogView.findViewById<Spinner>(R.id.spinnerRobotStatus)
         val sliderBattery = dialogView.findViewById<Slider>(R.id.sliderBattery)
-        val textBatteryLabel = dialogView.findViewById<TextView>(R.id.textBatteryLabel)
+        val textBatteryVal = dialogView.findViewById<TextView>(R.id.textBatteryLabel)
         val spinnerZone = dialogView.findViewById<Spinner>(R.id.spinnerZone)
 
         inputName.setText(robot.robotName)
         inputNumber.setText(robot.robotNumber)
+        sliderBattery.value = robot.batteryLevel.toFloat()
+        textBatteryVal.text = "Battery Level: ${robot.batteryLevel}%"
 
-        val statusOptions = listOf("Idle", "Active", "Charging", "Maintenance")
-        spinnerStatus.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, statusOptions)
-        val statusIndex = statusOptions.indexOf(robot.status)
+        val statuses = listOf("Idle", "Active", "Charging", "Maintenance")
+        spinnerStatus.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, statuses)
+        val statusIndex = statuses.indexOf(robot.status)
         if (statusIndex >= 0) spinnerStatus.setSelection(statusIndex)
 
-        sliderBattery.value = robot.batteryLevel.toFloat()
-        textBatteryLabel.text = "Battery Level: ${robot.batteryLevel}%"
-
-        sliderBattery.addOnChangeListener { _, value, _ ->
-            textBatteryLabel.text = "Battery Level: ${value.toInt()}%"
-        }
-
-        val zoneNames = listOf("None") + cachedZones.map { it.name }
+        val zoneNames = listOf("No Zone (Unassigned)") + cachedZones.map { it.name }
         spinnerZone.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, zoneNames)
         val zoneIndex = cachedZones.indexOfFirst { it.id == robot.zoneId }
-        if (zoneIndex >= 0) {
-            spinnerZone.setSelection(zoneIndex + 1)
-        } else {
-            spinnerZone.setSelection(0)
-        }
+        if (zoneIndex >= 0) spinnerZone.setSelection(zoneIndex + 1)
 
         AlertDialog.Builder(requireContext())
             .setTitle("Edit Robot")
@@ -165,16 +147,16 @@ class RobotsFragment : Fragment(R.layout.fragment_robots) {
             .setPositiveButton("Save") { _, _ ->
                 val name = inputName.text.toString().trim()
                 val number = inputNumber.text.toString().trim()
-                val selectedStatus = statusOptions[spinnerStatus.selectedItemPosition]
+                val status = statuses[spinnerStatus.selectedItemPosition]
                 val battery = sliderBattery.value.toInt()
-                val selectedZoneIndex = spinnerZone.selectedItemPosition
-                val zoneId = if (selectedZoneIndex > 0) cachedZones[selectedZoneIndex - 1].id else null
+                val zonePos = spinnerZone.selectedItemPosition
+                val zoneId = if (zonePos > 0) cachedZones[zonePos - 1].id else null
 
                 if (name.isNotEmpty() && number.isNotEmpty()) {
-                    viewModel.updateRobot(robot.id, name, number, selectedStatus, battery, zoneId)
+                    viewModel.updateRobot(robot.id, name, number, status, battery, zoneId)
                     Toast.makeText(requireContext(), "Robot updated successfully", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireContext(), "Name and Number are required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Name and number cannot be empty", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)

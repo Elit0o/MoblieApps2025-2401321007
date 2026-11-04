@@ -20,7 +20,17 @@ interface TaskDao {
     @Query("UPDATE tasks SET status = :status WHERE id = :taskId")
     suspend fun updateTaskStatus(taskId: Long, status: String)
 
-    @Query("SELECT * FROM tasks ORDER BY priority DESC, createdAt ASC")
+    @Query("""
+        SELECT * FROM tasks 
+        ORDER BY CASE status 
+            WHEN 'Active' THEN 1 
+            WHEN 'Pending' THEN 2 
+            WHEN 'Paused' THEN 3 
+            WHEN 'Cancelled' THEN 4 
+            WHEN 'Completed' THEN 5 
+            ELSE 6 
+        END, priority DESC, createdAt ASC
+    """)
     fun observeAllTasks(): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM tasks")
@@ -37,7 +47,14 @@ interface TaskDao {
         LEFT JOIN robots ON tasks.robotId = robots.id 
         LEFT JOIN waypoints ON tasks.waypointId = waypoints.id 
         LEFT JOIN zones ON waypoints.zoneId = zones.id
-        ORDER BY tasks.priority DESC, tasks.createdAt ASC
+        ORDER BY CASE tasks.status 
+            WHEN 'Active' THEN 1 
+            WHEN 'Pending' THEN 2 
+            WHEN 'Paused' THEN 3 
+            WHEN 'Cancelled' THEN 4 
+            WHEN 'Completed' THEN 5 
+            ELSE 6 
+        END, tasks.priority DESC, tasks.createdAt ASC
     """)
     fun observeTasksWithDetails(): Flow<List<TaskWithDetails>>
 

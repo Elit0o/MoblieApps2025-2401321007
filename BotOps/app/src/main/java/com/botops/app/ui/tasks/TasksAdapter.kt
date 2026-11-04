@@ -94,6 +94,13 @@ class TasksAdapter(
             progressBarTask.progress = task.progress
             textTaskProgressPercent.text = "${task.progress}%"
 
+            val isFinished = status.equals("Completed", true) || status.equals("Cancelled", true)
+            buttonCompleteTask.visibility = if (isFinished) View.GONE else View.VISIBLE
+            buttonPauseTask.visibility = if (isFinished) View.GONE else View.VISIBLE
+            buttonCancelTask.visibility = if (isFinished) View.GONE else View.VISIBLE
+            buttonEditTask.visibility = if (isFinished) View.GONE else View.VISIBLE
+            buttonDeleteTask.visibility = View.VISIBLE
+
             buttonCompleteTask.setOnClickListener {
                 onCompleteClick(item)
             }

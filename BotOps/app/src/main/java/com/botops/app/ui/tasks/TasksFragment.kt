@@ -17,27 +17,18 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.botops.app.R
-import com.botops.app.data.database.BotOpsDatabase
 import com.botops.app.data.entities.RobotEntity
 import com.botops.app.data.entities.TaskWithDetails
 import com.botops.app.data.entities.WaypointWithZone
 import com.botops.app.data.repository.BotOpsRepository
 import com.botops.app.viewmodel.BotOpsViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class TasksFragment : Fragment(R.layout.fragment_tasks) {
 
     private val viewModel: BotOpsViewModel by activityViewModels {
-        val database = BotOpsDatabase.getInstance(requireContext())
-        val repository = BotOpsRepository(
-            database.zoneDao(),
-            database.waypointDao(),
-            database.robotDao(),
-            database.taskDao(),
-            requireContext().applicationContext
-        )
+        val repository = BotOpsRepository.getInstance(requireContext())
         BotOpsViewModel.Factory(repository)
     }
 
@@ -92,18 +83,16 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
     private fun filterAndSubmitTasks() {
         var filtered = cachedTasksWithDetails
 
-        // Status filter
         if (selectedStatusFilter != "All Tasks") {
             filtered = filtered.filter { it.task.status.equals(selectedStatusFilter, true) }
         }
 
-        // Robot filter
         if (selectedRobotFilterIndex > 0 && cachedRobots.isNotEmpty()) {
             val selectedRobot = cachedRobots.getOrNull(selectedRobotFilterIndex - 1)
             filtered = filtered.filter { it.task.robotId == selectedRobot?.id }
         }
 
-        tasksAdapter.submitList(filtered)
+        tasksAdapter.submitList(ArrayList(filtered))
     }
 
     private fun showAddTaskDialog() {
@@ -121,8 +110,29 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         val robotDisplayList = cachedRobots.map { "${it.robotName} (${it.batteryLevel}% Battery)" }
         spinnerRobot.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, robotDisplayList)
 
-        val waypointDisplayList = cachedWaypointsWithZone.map { "${it.waypoint.name} (${it.zoneName ?: "No Zone"})" }
-        spinnerWaypoint.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, waypointDisplayList)
+        var currentValidWaypoints = cachedWaypointsWithZone
+
+        spinnerRobot.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedRobot = cachedRobots.getOrNull(position)
+                val robotZoneId = selectedRobot?.zoneId
+
+                currentValidWaypoints = if (robotZoneId != null) {
+                    cachedWaypointsWithZone.filter { it.waypoint.zoneId == robotZoneId }
+                } else {
+                    cachedWaypointsWithZone
+                }
+
+                val waypointDisplayList = if (currentValidWaypoints.isNotEmpty()) {
+                    currentValidWaypoints.map { "${it.waypoint.name} (${it.zoneName ?: "No Zone"})" }
+                } else {
+                    listOf("No waypoints in robot's zone")
+                }
+
+                spinnerWaypoint.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, waypointDisplayList)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         val priorityOptions = listOf("High (Priority 3)", "Medium (Priority 2)", "Low (Priority 1)")
         val priorityValues = listOf(3, 2, 1)
@@ -132,9 +142,13 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             .setTitle("Create Task")
             .setView(dialogView)
             .setPositiveButton("Add Task") { _, _ ->
+                if (currentValidWaypoints.isEmpty()) {
+                    Toast.makeText(requireContext(), "Selected robot has no accessible waypoints in its zone!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
                 val title = inputTitle.text.toString().trim().ifEmpty { "Inspection Task" }
                 val selectedRobot = cachedRobots[spinnerRobot.selectedItemPosition]
-                val selectedWaypoint = cachedWaypointsWithZone[spinnerWaypoint.selectedItemPosition].waypoint
+                val selectedWaypoint = currentValidWaypoints[spinnerWaypoint.selectedItemPosition].waypoint
                 val selectedPriority = priorityValues[spinnerPriority.selectedItemPosition]
 
                 viewModel.insertTask(title, selectedRobot.id, selectedWaypoint.id, selectedPriority)
@@ -164,10 +178,31 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         val robotIndex = cachedRobots.indexOfFirst { it.id == task.robotId }
         if (robotIndex >= 0) spinnerRobot.setSelection(robotIndex)
 
-        val waypointDisplayList = cachedWaypointsWithZone.map { "${it.waypoint.name} (${it.zoneName ?: "No Zone"})" }
-        spinnerWaypoint.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, waypointDisplayList)
-        val waypointIndex = cachedWaypointsWithZone.indexOfFirst { it.waypoint.id == task.waypointId }
-        if (waypointIndex >= 0) spinnerWaypoint.setSelection(waypointIndex)
+        var currentValidWaypoints = cachedWaypointsWithZone
+
+        spinnerRobot.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedRobot = cachedRobots.getOrNull(position)
+                val robotZoneId = selectedRobot?.zoneId
+
+                currentValidWaypoints = if (robotZoneId != null) {
+                    cachedWaypointsWithZone.filter { it.waypoint.zoneId == robotZoneId }
+                } else {
+                    cachedWaypointsWithZone
+                }
+
+                val waypointDisplayList = if (currentValidWaypoints.isNotEmpty()) {
+                    currentValidWaypoints.map { "${it.waypoint.name} (${it.zoneName ?: "No Zone"})" }
+                } else {
+                    listOf("No waypoints in robot's zone")
+                }
+
+                spinnerWaypoint.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, waypointDisplayList)
+                val waypointIndex = currentValidWaypoints.indexOfFirst { it.waypoint.id == task.waypointId }
+                if (waypointIndex >= 0) spinnerWaypoint.setSelection(waypointIndex)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
 
         val priorityOptions = listOf("High (Priority 3)", "Medium (Priority 2)", "Low (Priority 1)")
         val priorityValues = listOf(3, 2, 1)
@@ -179,9 +214,13 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             .setTitle("Edit Task")
             .setView(dialogView)
             .setPositiveButton("Save") { _, _ ->
+                if (currentValidWaypoints.isEmpty()) {
+                    Toast.makeText(requireContext(), "Selected robot has no accessible waypoints in its zone!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
                 val title = inputTitle.text.toString().trim().ifEmpty { "Inspection Task" }
                 val selectedRobot = cachedRobots[spinnerRobot.selectedItemPosition]
-                val selectedWaypoint = cachedWaypointsWithZone[spinnerWaypoint.selectedItemPosition].waypoint
+                val selectedWaypoint = currentValidWaypoints[spinnerWaypoint.selectedItemPosition].waypoint
                 val selectedPriority = priorityValues[spinnerPriority.selectedItemPosition]
 
                 viewModel.updateTask(task.id, title, selectedRobot.id, selectedWaypoint.id, task.status, selectedPriority, task.progress, task.createdAt)
@@ -222,13 +261,13 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.tasksWithDetails.collectLatest { tasksList ->
+                    viewModel.tasksWithDetails.collect { tasksList ->
                         cachedTasksWithDetails = tasksList
                         filterAndSubmitTasks()
                     }
                 }
                 launch {
-                    viewModel.robots.collectLatest { robotsList ->
+                    viewModel.robots.collect { robotsList ->
                         cachedRobots = robotsList
                         val robotNames = robotsList.map { it.robotName }
                         if (robotNames != lastRobotNames) {
@@ -242,7 +281,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                     }
                 }
                 launch {
-                    viewModel.waypointsWithZone.collectLatest { waypointsList ->
+                    viewModel.waypointsWithZone.collect { waypointsList ->
                         cachedWaypointsWithZone = waypointsList
                     }
                 }

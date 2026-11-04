@@ -18,7 +18,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.botops.app.R
-import com.botops.app.data.database.BotOpsDatabase
 import com.botops.app.data.entities.WaypointWithZone
 import com.botops.app.data.entities.ZoneEntity
 import com.botops.app.data.repository.BotOpsRepository
@@ -31,14 +30,7 @@ import kotlinx.coroutines.launch
 class WaypointsFragment : Fragment(R.layout.fragment_waypoints) {
 
     private val viewModel: BotOpsViewModel by activityViewModels {
-        val database = BotOpsDatabase.getInstance(requireContext())
-        val repository = BotOpsRepository(
-            database.zoneDao(),
-            database.waypointDao(),
-            database.robotDao(),
-            database.taskDao(),
-            requireContext().applicationContext
-        )
+        val repository = BotOpsRepository.getInstance(requireContext())
         BotOpsViewModel.Factory(repository)
     }
 
@@ -75,11 +67,10 @@ class WaypointsFragment : Fragment(R.layout.fragment_waypoints) {
     }
 
     private fun filterAndSubmitWaypoints() {
-        val filtered = if (selectedZoneFilterIndex == 0 || cachedZones.isEmpty()) {
-            cachedWaypointsWithZone
-        } else {
+        var filtered = cachedWaypointsWithZone
+        if (selectedZoneFilterIndex > 0 && cachedZones.isNotEmpty()) {
             val selectedZone = cachedZones.getOrNull(selectedZoneFilterIndex - 1)
-            cachedWaypointsWithZone.filter { it.waypoint.zoneId == selectedZone?.id }
+            filtered = filtered.filter { it.waypoint.zoneId == selectedZone?.id }
         }
         waypointsAdapter.submitList(filtered)
     }
@@ -94,32 +85,28 @@ class WaypointsFragment : Fragment(R.layout.fragment_waypoints) {
         val inputName = dialogView.findViewById<EditText>(R.id.inputWaypointName)
         val spinnerZone = dialogView.findViewById<Spinner>(R.id.spinnerZone)
         val zoneMapView = dialogView.findViewById<ZoneMapView>(R.id.zoneMapView)
-        val textSelectedCoords = dialogView.findViewById<TextView>(R.id.textSelectedCoords)
+        val textCoords = dialogView.findViewById<TextView>(R.id.textSelectedCoords)
 
-        var selectedX = 50.0
-        var selectedY = 50.0
+        val zoneNames = cachedZones.map { it.name }
+        spinnerZone.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, zoneNames)
 
-        zoneMapView.setSelectedCoordinate(selectedX, selectedY)
-        textSelectedCoords.text = "Selected: X: $selectedX, Y: $selectedY"
-
-        zoneMapView.onCoordinateSelectedListener = { x, y ->
-            selectedX = x
-            selectedY = y
-            textSelectedCoords.text = "Selected: X: $x, Y: $y"
-        }
-
-        spinnerZone.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, cachedZones.map { it.name })
+        var selX = 50.0
+        var selY = 50.0
 
         spinnerZone.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedZoneId = cachedZones[position].id
-                val zoneWaypoints = cachedWaypointsWithZone
-                    .filter { it.waypoint.zoneId == selectedZoneId }
-                    .map { it.waypoint }
-                zoneMapView.setExistingWaypoints(zoneWaypoints)
+                val selectedZone = cachedZones[position]
+                zoneMapView.setZoneBounds(selectedZone.minX, selectedZone.maxX, selectedZone.minY, selectedZone.maxY)
+                val zoneWps = cachedWaypointsWithZone.filter { it.waypoint.zoneId == selectedZone.id }.map { it.waypoint }
+                zoneMapView.setExistingWaypoints(zoneWps)
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        zoneMapView.onCoordinateSelectedListener = { x, y ->
+            selX = x
+            selY = y
+            textCoords.text = "Selected: X: $x, Y: $y"
         }
 
         AlertDialog.Builder(requireContext())
@@ -130,10 +117,10 @@ class WaypointsFragment : Fragment(R.layout.fragment_waypoints) {
                 val selectedZone = cachedZones[spinnerZone.selectedItemPosition]
 
                 if (name.isNotEmpty()) {
-                    viewModel.insertWaypoint(name, selectedX, selectedY, selectedZone.id)
-                    Toast.makeText(requireContext(), "Waypoint mapped & added successfully", Toast.LENGTH_SHORT).show()
+                    viewModel.insertWaypoint(name, selX, selY, selectedZone.id)
+                    Toast.makeText(requireContext(), "Waypoint added successfully within room parameters", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireContext(), "Waypoint name is required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Waypoint name cannot be empty", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -151,35 +138,34 @@ class WaypointsFragment : Fragment(R.layout.fragment_waypoints) {
         val inputName = dialogView.findViewById<EditText>(R.id.inputWaypointName)
         val spinnerZone = dialogView.findViewById<Spinner>(R.id.spinnerZone)
         val zoneMapView = dialogView.findViewById<ZoneMapView>(R.id.zoneMapView)
-        val textSelectedCoords = dialogView.findViewById<TextView>(R.id.textSelectedCoords)
+        val textCoords = dialogView.findViewById<TextView>(R.id.textSelectedCoords)
 
         inputName.setText(waypoint.name)
-        var selectedX = waypoint.xCord
-        var selectedY = waypoint.yCord
 
-        zoneMapView.setSelectedCoordinate(selectedX, selectedY)
-        textSelectedCoords.text = "Selected: X: $selectedX, Y: $selectedY"
-
-        zoneMapView.onCoordinateSelectedListener = { x, y ->
-            selectedX = x
-            selectedY = y
-            textSelectedCoords.text = "Selected: X: $x, Y: $y"
-        }
-
-        spinnerZone.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, cachedZones.map { it.name })
+        val zoneNames = cachedZones.map { it.name }
+        spinnerZone.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, zoneNames)
         val zoneIndex = cachedZones.indexOfFirst { it.id == waypoint.zoneId }
         if (zoneIndex >= 0) spinnerZone.setSelection(zoneIndex)
 
+        var selX = waypoint.xCord
+        var selY = waypoint.yCord
+        textCoords.text = "Selected: X: $selX, Y: $selY"
+
         spinnerZone.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedZoneId = cachedZones[position].id
-                val zoneWaypoints = cachedWaypointsWithZone
-                    .filter { it.waypoint.zoneId == selectedZoneId && it.waypoint.id != waypoint.id }
-                    .map { it.waypoint }
-                zoneMapView.setExistingWaypoints(zoneWaypoints)
+                val selectedZone = cachedZones[position]
+                zoneMapView.setZoneBounds(selectedZone.minX, selectedZone.maxX, selectedZone.minY, selectedZone.maxY)
+                val zoneWps = cachedWaypointsWithZone.filter { it.waypoint.zoneId == selectedZone.id }.map { it.waypoint }
+                zoneMapView.setExistingWaypoints(zoneWps)
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        zoneMapView.setSelectedCoordinate(waypoint.xCord, waypoint.yCord)
+        zoneMapView.onCoordinateSelectedListener = { x, y ->
+            selX = x
+            selY = y
+            textCoords.text = "Selected: X: $x, Y: $y"
         }
 
         AlertDialog.Builder(requireContext())
@@ -190,10 +176,10 @@ class WaypointsFragment : Fragment(R.layout.fragment_waypoints) {
                 val selectedZone = cachedZones[spinnerZone.selectedItemPosition]
 
                 if (name.isNotEmpty()) {
-                    viewModel.updateWaypoint(waypoint.id, name, selectedX, selectedY, selectedZone.id)
+                    viewModel.updateWaypoint(waypoint.id, name, selX, selY, selectedZone.id)
                     Toast.makeText(requireContext(), "Waypoint updated successfully", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireContext(), "Waypoint name is required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Waypoint name cannot be empty", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)

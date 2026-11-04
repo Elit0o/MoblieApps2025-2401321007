@@ -13,35 +13,35 @@ import kotlinx.coroutines.launch
 class BotOpsViewModel(private val repository: BotOpsRepository) : ViewModel() {
 
     val zones: StateFlow<List<ZoneEntity>> = repository.allZones
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val waypoints: StateFlow<List<WaypointEntity>> = repository.allWaypoints
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val waypointsWithZone: StateFlow<List<WaypointWithZone>> = repository.waypointsWithZone
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val robots: StateFlow<List<RobotEntity>> = repository.allRobots
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val robotsWithZone: StateFlow<List<RobotWithZone>> = repository.robotsWithZone
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val tasks: StateFlow<List<TaskEntity>> = repository.allTasks
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val tasksWithDetails: StateFlow<List<TaskWithDetails>> = repository.tasksWithDetails
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    fun insertZone(name: String, description: String) {
+    fun insertZone(name: String, description: String, minX: Double = 0.0, maxX: Double = 100.0, minY: Double = 0.0, maxY: Double = 100.0) {
         viewModelScope.launch {
-            repository.insertZone(ZoneEntity(name = name, description = description))
+            repository.insertZone(ZoneEntity(name = name, description = description, minX = minX, maxX = maxX, minY = minY, maxY = maxY))
         }
     }
 
-    fun updateZone(id: Long, name: String, description: String) {
+    fun updateZone(id: Long, name: String, description: String, minX: Double = 0.0, maxX: Double = 100.0, minY: Double = 0.0, maxY: Double = 100.0) {
         viewModelScope.launch {
-            repository.updateZone(ZoneEntity(id = id, name = name, description = description))
+            repository.updateZone(ZoneEntity(id = id, name = name, description = description, minX = minX, maxX = maxX, minY = minY, maxY = maxY))
         }
     }
 

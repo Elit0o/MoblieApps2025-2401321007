@@ -26,15 +26,75 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/inputZoneName" />
 
+    <LinearLayout
+        android:id="@+id/layoutXBounds"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/inputZoneDescription">
+
+        <EditText
+            android:id="@+id/inputMinX"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Min X (e.g. 0)"
+            android:inputType="numberDecimal"
+            android:text="0" />
+
+        <EditText
+            android:id="@+id/inputMaxX"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="Max X (e.g. 100)"
+            android:inputType="numberDecimal"
+            android:text="100" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutYBounds"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutXBounds">
+
+        <EditText
+            android:id="@+id/inputMinY"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Min Y (e.g. 0)"
+            android:inputType="numberDecimal"
+            android:text="0" />
+
+        <EditText
+            android:id="@+id/inputMaxY"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:hint="Max Y (e.g. 100)"
+            android:inputType="numberDecimal"
+            android:text="100" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/buttonAddZone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Add Zone"
+        android:layout_marginTop="12dp"
+        android:text="Add Zone / Room"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/inputZoneDescription" />
+        app:layout_constraintTop_toBottomOf="@+id/layoutYBounds" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewZones"

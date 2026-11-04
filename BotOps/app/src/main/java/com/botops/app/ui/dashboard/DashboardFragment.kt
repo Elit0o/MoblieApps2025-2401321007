@@ -11,7 +11,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.botops.app.R
-import com.botops.app.data.database.BotOpsDatabase
 import com.botops.app.data.repository.BotOpsRepository
 import com.botops.app.viewmodel.BotOpsViewModel
 import com.google.android.material.button.MaterialButton
@@ -21,14 +20,7 @@ import kotlinx.coroutines.launch
 class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
 
     private val viewModel: BotOpsViewModel by activityViewModels {
-        val database = BotOpsDatabase.getInstance(requireContext())
-        val repository = BotOpsRepository(
-            database.zoneDao(),
-            database.waypointDao(),
-            database.robotDao(),
-            database.taskDao(),
-            requireContext().applicationContext
-        )
+        val repository = BotOpsRepository.getInstance(requireContext())
         BotOpsViewModel.Factory(repository)
     }
 
@@ -39,10 +31,12 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
         val textActiveIdleRobots = view.findViewById<TextView>(R.id.textActiveIdleRobots)
         val textTasksMetrics = view.findViewById<TextView>(R.id.textTasksMetrics)
         val textLowBatteryCount = view.findViewById<TextView>(R.id.textLowBatteryCount)
+        val textActiveOperationsSummary = view.findViewById<TextView>(R.id.textActiveOperationsSummary)
 
         val buttonGoToRobots = view.findViewById<MaterialButton>(R.id.buttonGoToRobots)
         val buttonGoToTasks = view.findViewById<MaterialButton>(R.id.buttonGoToTasks)
         val buttonGoToWaypoints = view.findViewById<MaterialButton>(R.id.buttonGoToWaypoints)
+        val buttonGoToLiveMap = view.findViewById<MaterialButton>(R.id.buttonGoToLiveMap)
 
         val navOptions = NavOptions.Builder()
             .setPopUpTo(R.id.dashboardFragment, false, saveState = true)
@@ -58,6 +52,9 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
         }
         buttonGoToWaypoints.setOnClickListener {
             findNavController().navigate(R.id.waypointsFragment, null, navOptions)
+        }
+        buttonGoToLiveMap.setOnClickListener {
+            findNavController().navigate(R.id.fleetMapFragment, null, navOptions)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -80,6 +77,24 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
                         val pendingTasks = tasks.count { it.status.equals("Pending", true) }
 
                         textTasksMetrics.text = "$activeTasks / $pendingTasks"
+                    }
+                }
+                launch {
+                    viewModel.tasksWithDetails.collectLatest { taskDetails ->
+                        val activeTasks = taskDetails.filter { it.task.status.equals("Active", true) }
+                        if (activeTasks.isNotEmpty()) {
+                            val summary = activeTasks.joinToString("\n\n") { detail ->
+                                val robotName = detail.robotName ?: "Robot #${detail.task.robotId}"
+                                val battery = detail.robotBattery ?: 0
+                                val title = detail.task.title
+                                val progress = detail.task.progress
+                                val waypoint = detail.waypointName ?: "Destination"
+                                "• $robotName ($battery% Battery)\n  Executing: \"$title\"\n  Target: $waypoint ($progress%)"
+                            }
+                            textActiveOperationsSummary.text = summary
+                        } else {
+                            textActiveOperationsSummary.text = "No robots currently executing tasks."
+                        }
                     }
                 }
             }

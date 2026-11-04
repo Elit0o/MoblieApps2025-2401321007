@@ -6,11 +6,10 @@ import com.botops.app.data.dao.RobotDao
 import com.botops.app.data.dao.TaskDao
 import com.botops.app.data.dao.WaypointDao
 import com.botops.app.data.dao.ZoneDao
+import com.botops.app.data.database.BotOpsDatabase
 import com.botops.app.data.entities.*
 import com.botops.app.data.network.RobotSocketClient
-import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,22 +35,32 @@ class BotOpsRepository(
         }
     }
     private val socketClient = RobotSocketClient(context)
-    private val listenerRegistrations = mutableListOf<ListenerRegistration>()
 
     companion object {
         const val MIN_BATTERY_LEVEL = 20
         private const val TAG = "BotOpsRepository"
+
+        @Volatile
+        private var INSTANCE: BotOpsRepository? = null
+
+        fun getInstance(context: Context): BotOpsRepository {
+            return INSTANCE ?: synchronized(this) {
+                val db = BotOpsDatabase.getInstance(context)
+                val instance = BotOpsRepository(
+                    db.zoneDao(),
+                    db.waypointDao(),
+                    db.robotDao(),
+                    db.taskDao(),
+                    context.applicationContext
+                )
+                INSTANCE = instance
+                instance
+            }
+        }
     }
 
     init {
-        startRealtimeSync()
         startFleetSimulator()
-    }
-
-    private fun isDeletedLocally(entityType: String, id: Long): Boolean {
-        val prefs = context?.getSharedPreferences("deleted_prefs", Context.MODE_PRIVATE) ?: return false
-        val deletedSet = prefs.getStringSet(entityType, emptySet()) ?: emptySet()
-        return deletedSet.contains(id.toString())
     }
 
     private fun markAsDeletedLocally(entityType: String, id: Long) {
@@ -61,171 +70,19 @@ class BotOpsRepository(
         prefs.edit().putStringSet(entityType, deletedSet).apply()
     }
 
-    /**
-     * Start real-time sync listeners for Firestore remote collections safely.
-     */
     fun startRealtimeSync() {
-        val fs = firestore ?: run {
-            Log.w(TAG, "Firestore is unavailable. Operating strictly offline in Room.")
-            return
-        }
-
-        // --- ZONES LISTENER ---
-        try {
-            val zoneListener = fs.collection("zones")
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) return@addSnapshotListener
-                    snapshot?.documentChanges?.forEach { change ->
-                        val doc = change.document
-                        val id = doc.getLong("id") ?: doc.id.toLongOrNull() ?: return@forEach
-                        if (isDeletedLocally("zones", id)) return@forEach
-
-                        val name = doc.getString("name") ?: ""
-                        val description = doc.getString("description") ?: ""
-
-                        repositoryScope.launch(Dispatchers.IO) {
-                            try {
-                                when (change.type) {
-                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                        zoneDao.insertZone(ZoneEntity(id = id, name = name, description = description))
-                                    }
-                                    DocumentChange.Type.REMOVED -> {
-                                        zoneDao.deleteZoneById(id)
-                                    }
-                                }
-                            } catch (_: Throwable) {}
-                        }
-                    }
-                }
-            listenerRegistrations.add(zoneListener)
-        } catch (_: Throwable) {}
-
-        // --- WAYPOINTS LISTENER ---
-        try {
-            val waypointListener = fs.collection("waypoints")
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) return@addSnapshotListener
-                    snapshot?.documentChanges?.forEach { change ->
-                        val doc = change.document
-                        val id = doc.getLong("id") ?: doc.id.toLongOrNull() ?: return@forEach
-                        if (isDeletedLocally("waypoints", id)) return@forEach
-
-                        val name = doc.getString("name") ?: ""
-                        val xCord = doc.getDouble("xCord") ?: 0.0
-                        val yCord = doc.getDouble("yCord") ?: 0.0
-                        val zoneId = doc.getLong("zoneId") ?: 0L
-
-                        repositoryScope.launch(Dispatchers.IO) {
-                            try {
-                                when (change.type) {
-                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                        waypointDao.insertWaypoint(WaypointEntity(id = id, name = name, xCord = xCord, yCord = yCord, zoneId = zoneId))
-                                    }
-                                    DocumentChange.Type.REMOVED -> {
-                                        waypointDao.deleteWaypointById(id)
-                                    }
-                                }
-                            } catch (_: Throwable) {}
-                        }
-                    }
-                }
-            listenerRegistrations.add(waypointListener)
-        } catch (_: Throwable) {}
-
-        // --- ROBOTS LISTENER ---
-        try {
-            val robotListener = fs.collection("robots")
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) return@addSnapshotListener
-                    snapshot?.documentChanges?.forEach { change ->
-                        val doc = change.document
-                        val id = doc.getLong("id") ?: doc.id.toLongOrNull() ?: return@forEach
-                        if (isDeletedLocally("robots", id)) return@forEach
-
-                        val name = doc.getString("robotName") ?: ""
-                        val number = doc.getString("robotNumber") ?: ""
-                        val status = doc.getString("status") ?: "Idle"
-                        val battery = doc.getLong("batteryLevel")?.toInt() ?: 100
-                        val zoneId = doc.getLong("zoneId")
-
-                        repositoryScope.launch(Dispatchers.IO) {
-                            try {
-                                val existingRobot = robotDao.getRobotById(id)
-                                val finalBattery = if (existingRobot != null && existingRobot.batteryLevel > battery) existingRobot.batteryLevel else battery
-                                val finalStatus = if (existingRobot != null && existingRobot.status == "Charging" && finalBattery < 100) "Charging" else status
-
-                                val targetZoneId = if (zoneId != null && zoneDao.getZoneById(zoneId) != null) zoneId else null
-                                when (change.type) {
-                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                        robotDao.insertRobot(RobotEntity(id = id, robotName = name, robotNumber = number, status = finalStatus, batteryLevel = finalBattery, zoneId = targetZoneId))
-                                        evaluateTaskStatusesForRobot(id)
-                                    }
-                                    DocumentChange.Type.REMOVED -> {
-                                        robotDao.deleteRobotById(id)
-                                    }
-                                }
-                            } catch (_: Throwable) {}
-                        }
-                    }
-                }
-            listenerRegistrations.add(robotListener)
-        } catch (_: Throwable) {}
-
-        // --- TASKS LISTENER ---
-        try {
-            val taskListener = fs.collection("tasks")
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) return@addSnapshotListener
-                    snapshot?.documentChanges?.forEach { change ->
-                        val doc = change.document
-                        val id = doc.getLong("id") ?: doc.id.toLongOrNull() ?: return@forEach
-                        if (isDeletedLocally("tasks", id)) return@forEach
-
-                        val title = doc.getString("title") ?: "Inspection Task"
-                        val robotId = doc.getLong("robotId") ?: 0L
-                        val waypointId = doc.getLong("waypointId") ?: 0L
-                        val status = doc.getString("status") ?: "Pending"
-                        val priority = doc.getLong("priority")?.toInt() ?: 1
-                        val progress = doc.getLong("progress")?.toInt() ?: 0
-                        val createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
-
-                        repositoryScope.launch(Dispatchers.IO) {
-                            try {
-                                val existingTask = taskDao.getTaskById(id)
-                                val finalProgress = if (existingTask != null && existingTask.progress > progress) existingTask.progress else progress
-                                val finalStatus = if (existingTask != null && existingTask.status == "Completed") "Completed" else status
-
-                                when (change.type) {
-                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                        taskDao.insertTask(TaskEntity(id = id, title = title, robotId = robotId, waypointId = waypointId, status = finalStatus, priority = priority, progress = finalProgress, createdAt = createdAt))
-                                    }
-                                    DocumentChange.Type.REMOVED -> {
-                                        taskDao.deleteTaskById(id)
-                                    }
-                                }
-                            } catch (_: Throwable) {}
-                        }
-                    }
-                }
-            listenerRegistrations.add(taskListener)
-        } catch (_: Throwable) {}
     }
 
-    /**
-     * Background Simulator Engine ("Making it Alive"):
-     * Updates both local Room DB and syncs progress/battery changes to Firestore in real-time.
-     */
     private fun startFleetSimulator() {
         repositoryScope.launch(Dispatchers.IO) {
             while (true) {
                 try {
-                    delay(5000) // Every 5 seconds for smooth, gradual, realistic progression
+                    delay(4000)
 
-                    // 1. Process Robot Charging (+2% per tick)
                     val allRobots = robotDao.getAllRobotsSync()
                     for (robot in allRobots) {
                         if (robot.status.equals("Charging", true)) {
-                            val newBattery = (robot.batteryLevel + 2).coerceAtMost(100)
+                            val newBattery = (robot.batteryLevel + 3).coerceAtMost(100)
                             val newStatus = if (newBattery >= 100) "Idle" else "Charging"
                             val updatedRobot = robot.copy(batteryLevel = newBattery, status = newStatus)
                             robotDao.updateRobot(updatedRobot)
@@ -242,34 +99,56 @@ class BotOpsRepository(
                         }
                     }
 
-                    // 2. Process Active Tasks Execution Progress (+2% per tick)
                     val allTasks = taskDao.getAllTasksSync()
                     for (task in allTasks) {
                         if (task.status.equals("Active", true)) {
-                            val nextProgress = (task.progress + 2).coerceAtMost(100)
-                            if (nextProgress >= 100) {
-                                val completedTask = task.copy(progress = 100, status = "Completed")
-                                taskDao.insertTask(completedTask)
-                                try {
-                                    firestore?.collection("tasks")?.document(task.id.toString())?.update(mapOf("status" to "Completed", "progress" to 100))
-                                } catch (_: Throwable) {}
+                            val waypoint = waypointDao.getWaypointById(task.waypointId)
+                            val zone = if (waypoint != null) zoneDao.getZoneById(waypoint.zoneId) else null
+                            val robot = robotDao.getRobotById(task.robotId)
 
-                                val robot = robotDao.getRobotById(task.robotId)
-                                if (robot != null) {
-                                    val drainedBattery = (robot.batteryLevel - 10).coerceAtLeast(0)
-                                    val robotStatus = if (drainedBattery < MIN_BATTERY_LEVEL) "Charging" else robot.status
-                                    robotDao.updateRobot(robot.copy(batteryLevel = drainedBattery, status = robotStatus))
+                            if (robot != null && waypoint != null) {
+                                val targetX = waypoint.xCord
+                                val targetY = waypoint.yCord
+
+                                var newX = robot.currentX + (targetX - robot.currentX) * 0.3
+                                var newY = robot.currentY + (targetY - robot.currentY) * 0.3
+
+                                if (zone != null) {
+                                    newX = newX.coerceIn(zone.minX, zone.maxX)
+                                    newY = newY.coerceIn(zone.minY, zone.maxY)
+                                }
+
+                                val distanceToTarget = Math.hypot(targetX - newX, targetY - newY)
+                                val nextProgress = if (distanceToTarget < 2.0) 100 else (task.progress + 20).coerceAtMost(95)
+
+                                if (distanceToTarget < 2.0 || nextProgress >= 100) {
+                                    val completedTask = task.copy(progress = 100, status = "Completed")
+                                    taskDao.insertTask(completedTask)
                                     try {
-                                        firestore?.collection("robots")?.document(robot.id.toString())?.update(mapOf("batteryLevel" to drainedBattery, "status" to robotStatus))
+                                        firestore?.collection("tasks")?.document(task.id.toString())?.update(mapOf("status" to "Completed", "progress" to 100))
+                                    } catch (_: Throwable) {}
+
+                                    val drainedBattery = (robot.batteryLevel - 10).coerceAtLeast(0)
+                                    val robotStatus = if (drainedBattery < MIN_BATTERY_LEVEL) "Charging" else "Idle"
+                                    val updatedRobotWithCoords = robot.copy(currentX = targetX, currentY = targetY, batteryLevel = drainedBattery, status = robotStatus)
+                                    robotDao.updateRobot(updatedRobotWithCoords)
+                                    try {
+                                        firestore?.collection("robots")?.document(robot.id.toString())?.update(mapOf("currentX" to targetX, "currentY" to targetY, "batteryLevel" to drainedBattery, "status" to robotStatus))
                                     } catch (_: Throwable) {}
                                     evaluateTaskStatusesForRobot(robot.id)
+                                } else {
+                                    val progressingTask = task.copy(progress = nextProgress)
+                                    taskDao.insertTask(progressingTask)
+                                    try {
+                                        firestore?.collection("tasks")?.document(task.id.toString())?.update("progress", nextProgress)
+                                    } catch (_: Throwable) {}
+
+                                    val updatedRobotWithCoords = robot.copy(currentX = newX, currentY = newY, status = "Active")
+                                    robotDao.updateRobot(updatedRobotWithCoords)
+                                    try {
+                                        firestore?.collection("robots")?.document(robot.id.toString())?.update(mapOf("currentX" to newX, "currentY" to newY, "status" to "Active"))
+                                    } catch (_: Throwable) {}
                                 }
-                            } else {
-                                val progressingTask = task.copy(progress = nextProgress)
-                                taskDao.insertTask(progressingTask)
-                                try {
-                                    firestore?.collection("tasks")?.document(task.id.toString())?.update("progress", nextProgress)
-                                } catch (_: Throwable) {}
                             }
                         }
                     }
@@ -281,23 +160,34 @@ class BotOpsRepository(
     }
 
     fun stopRealtimeSync() {
-        try {
-            listenerRegistrations.forEach { it.remove() }
-            listenerRegistrations.clear()
-        } catch (_: Throwable) {}
     }
 
-    // --- ZONES ---
     suspend fun insertZone(zone: ZoneEntity): Long = withContext(Dispatchers.IO) {
         val localId = zoneDao.insertZone(zone)
-        val zoneData = mapOf("id" to localId, "name" to zone.name, "description" to zone.description)
+        val zoneData = mapOf(
+            "id" to localId, 
+            "name" to zone.name, 
+            "description" to zone.description,
+            "minX" to zone.minX,
+            "maxX" to zone.maxX,
+            "minY" to zone.minY,
+            "maxY" to zone.maxY
+        )
         try { firestore?.collection("zones")?.document(localId.toString())?.set(zoneData) } catch (_: Throwable) {}
         localId
     }
 
     suspend fun updateZone(zone: ZoneEntity) = withContext(Dispatchers.IO) {
         zoneDao.updateZone(zone)
-        val zoneData = mapOf("id" to zone.id, "name" to zone.name, "description" to zone.description)
+        val zoneData = mapOf(
+            "id" to zone.id, 
+            "name" to zone.name, 
+            "description" to zone.description,
+            "minX" to zone.minX,
+            "maxX" to zone.maxX,
+            "minY" to zone.minY,
+            "maxY" to zone.maxY
+        )
         try { firestore?.collection("zones")?.document(zone.id.toString())?.set(zoneData) } catch (_: Throwable) {}
     }
 
@@ -309,7 +199,6 @@ class BotOpsRepository(
         try { firestore?.collection("zones")?.document(id.toString())?.delete() } catch (_: Throwable) {}
     }
 
-    // --- WAYPOINTS ---
     suspend fun insertWaypoint(waypoint: WaypointEntity): Long = withContext(Dispatchers.IO) {
         val localId = waypointDao.insertWaypoint(waypoint)
         val waypointData = mapOf("id" to localId, "name" to waypoint.name, "xCord" to waypoint.xCord, "yCord" to waypoint.yCord, "zoneId" to waypoint.zoneId)
@@ -333,10 +222,18 @@ class BotOpsRepository(
         try { firestore?.collection("waypoints")?.document(id.toString())?.delete() } catch (_: Throwable) {}
     }
 
-    // --- ROBOTS ---
     suspend fun insertRobot(robot: RobotEntity): Long = withContext(Dispatchers.IO) {
         val localId = robotDao.insertRobot(robot)
-        val robotData = mapOf("id" to localId, "robotName" to robot.robotName, "robotNumber" to robot.robotNumber, "status" to robot.status, "batteryLevel" to robot.batteryLevel, "zoneId" to robot.zoneId)
+        val robotData = mapOf(
+            "id" to localId, 
+            "robotName" to robot.robotName, 
+            "robotNumber" to robot.robotNumber, 
+            "status" to robot.status, 
+            "batteryLevel" to robot.batteryLevel, 
+            "zoneId" to robot.zoneId,
+            "currentX" to robot.currentX,
+            "currentY" to robot.currentY
+        )
         try { firestore?.collection("robots")?.document(localId.toString())?.set(robotData) } catch (_: Throwable) {}
 
         repositoryScope.launch(Dispatchers.IO) {
@@ -349,7 +246,16 @@ class BotOpsRepository(
 
     suspend fun updateRobot(robot: RobotEntity) = withContext(Dispatchers.IO) {
         robotDao.updateRobot(robot)
-        val robotData = mapOf("id" to robot.id, "robotName" to robot.robotName, "robotNumber" to robot.robotNumber, "status" to robot.status, "batteryLevel" to robot.batteryLevel, "zoneId" to robot.zoneId)
+        val robotData = mapOf(
+            "id" to robot.id, 
+            "robotName" to robot.robotName, 
+            "robotNumber" to robot.robotNumber, 
+            "status" to robot.status, 
+            "batteryLevel" to robot.batteryLevel, 
+            "zoneId" to robot.zoneId,
+            "currentX" to robot.currentX,
+            "currentY" to robot.currentY
+        )
         try { firestore?.collection("robots")?.document(robot.id.toString())?.set(robotData) } catch (_: Throwable) {}
 
         repositoryScope.launch(Dispatchers.IO) {
@@ -372,7 +278,6 @@ class BotOpsRepository(
         }
     }
 
-    // --- TASKS ---
     suspend fun insertTask(task: TaskEntity): Long = withContext(Dispatchers.IO) {
         val localId = taskDao.insertTask(task)
 
@@ -430,6 +335,13 @@ class BotOpsRepository(
             socketClient.sendCommand("COMPLETE_TASK:taskId=$taskId,robotId=${task.robotId}")
         }
 
+        val robot = robotDao.getRobotById(task.robotId)
+        if (robot != null && robot.status.equals("Active", true)) {
+            val nextStatus = if (robot.batteryLevel < MIN_BATTERY_LEVEL) "Charging" else "Idle"
+            robotDao.updateRobot(robot.copy(status = nextStatus))
+            try { firestore?.collection("robots")?.document(robot.id.toString())?.update("status", nextStatus) } catch (_: Throwable) {}
+        }
+
         evaluateTaskStatusesForRobot(task.robotId)
     }
 
@@ -477,12 +389,17 @@ class BotOpsRepository(
             val robot = robotDao.getRobotById(robotId) ?: return@withContext
             val uncompletedTasks = taskDao.getActiveAndPendingTasksForRobotSync(robotId)
 
-            if (uncompletedTasks.isEmpty()) return@withContext
-
-            val hasEnoughBattery = robot.batteryLevel >= MIN_BATTERY_LEVEL && robot.status != "Maintenance" && robot.status != "Charging"
+            if (uncompletedTasks.isEmpty()) {
+                if (robot.status.equals("Active", true)) {
+                    val updatedRobot = robot.copy(status = "Idle")
+                    robotDao.updateRobot(updatedRobot)
+                    try { firestore?.collection("robots")?.document(robotId.toString())?.update("status", "Idle") } catch (_: Throwable) {}
+                }
+                return@withContext
+            }
 
             uncompletedTasks.forEachIndexed { index, task ->
-                val expectedStatus = if (index == 0 && hasEnoughBattery) "Active" else "Pending"
+                val expectedStatus = if (index == 0) "Active" else "Pending"
                 if (task.status != expectedStatus) {
                     val updatedStatusTask = task.copy(status = expectedStatus)
                     taskDao.insertTask(updatedStatusTask)
@@ -494,6 +411,18 @@ class BotOpsRepository(
                     repositoryScope.launch(Dispatchers.IO) {
                         socketClient.sendCommand("TASK_STATUS_CHANGED:taskId=${task.id},status=$expectedStatus,robotId=$robotId")
                     }
+                }
+            }
+
+            if (robot.status != "Maintenance" && robot.status != "Charging") {
+                val activeTaskExists = uncompletedTasks.any { it.status.equals("Active", true) }
+                val newRobotStatus = if (activeTaskExists) "Active" else "Idle"
+                if (robot.status != newRobotStatus) {
+                    val updatedRobot = robot.copy(status = newRobotStatus)
+                    robotDao.updateRobot(updatedRobot)
+                    try {
+                        firestore?.collection("robots")?.document(robotId.toString())?.update("status", newRobotStatus)
+                    } catch (_: Throwable) {}
                 }
             }
         } catch (_: Throwable) {}

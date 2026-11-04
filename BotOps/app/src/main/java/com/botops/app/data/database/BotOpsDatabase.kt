@@ -20,7 +20,7 @@ import com.botops.app.data.entities.ZoneEntity
         RobotEntity::class,
         TaskEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class BotOpsDatabase : RoomDatabase() {

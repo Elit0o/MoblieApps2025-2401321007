@@ -36,6 +36,12 @@
         tools:layout="@layout/fragment_tasks" />
 
     <fragment
+        android:id="@+id/fleetMapFragment"
+        android:name="com.botops.app.ui.map.FleetMapFragment"
+        android:label="Live Map"
+        tools:layout="@layout/fragment_fleet_map" />
+
+    <fragment
         android:id="@+id/settingsFragment"
         android:name="com.botops.app.ui.settings.SettingsFragment"
         android:label="Settings"

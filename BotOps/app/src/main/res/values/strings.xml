@@ -11,5 +11,9 @@
     <string name="menu_robots">Robots</string>
     <string name="menu_waypoints">Waypoints</string>
     <string name="menu_tasks">Tasks</string>
+    <string name="menu_live_map">Live Map</string>
     <string name="menu_settings">Settings</string>
+
+    <string name="fleet_map_title">Fleet Live Map &amp; Room Parameters</string>
+    <string name="fleet_map_subtitle">Live locations of robots within mapped room boundaries</string>
 </resources>
