@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/textTaskStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#E8F5E9"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="#2E7D32"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="Active"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textTaskPriority"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="#FFF3E0"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="#E65100"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="Priority: 3"
+            app:layout_constraintStart_toEndOf="@+id/textTaskStatus"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textTaskTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="Transport Component A"
+            app:layout_constraintEnd_toStartOf="@+id/buttonCompleteTask"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textTaskStatus" />
+
+        <TextView
+            android:id="@+id/textTaskRobot"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="14sp"
+            tools:text="Robot: Atlas (85% Battery)"
+            app:layout_constraintEnd_toStartOf="@+id/buttonCompleteTask"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textTaskTitle" />
+
+        <TextView
+            android:id="@+id/textTaskWaypoint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#555555"
+            android:textSize="14sp"
+            tools:text="Destination: Waypoint Alpha (Zone 1)"
+            app:layout_constraintEnd_toStartOf="@+id/buttonCompleteTask"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textTaskRobot" />
+
+        <!-- Progress Bar & Percentage -->
+        <ProgressBar
+            android:id="@+id/progressBarTask"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            android:progress="45"
+            app:layout_constraintEnd_toStartOf="@+id/textTaskProgressPercent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textTaskWaypoint" />
+
+        <TextView
+            android:id="@+id/textTaskProgressPercent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="#757575"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="45%"
+            app:layout_constraintBottom_toBottomOf="@+id/progressBarTask"
+            app:layout_constraintEnd_toStartOf="@+id/buttonCompleteTask"
+            app:layout_constraintTop_toTopOf="@+id/progressBarTask" />
+
+        <!-- Action Buttons: Complete, Pause, Cancel, Edit, Delete -->
+        <ImageButton
+            android:id="@+id/buttonCompleteTask"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Mark as done"
+            android:src="@android:drawable/ic_menu_send"
+            app:tint="#388E3C"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonPauseTask"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/buttonPauseTask"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Pause/Resume task"
+            android:src="@android:drawable/ic_media_pause"
+            app:tint="#F57F17"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonCancelTask"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/buttonCancelTask"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Cancel task"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#E65100"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonEditTask"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/buttonEditTask"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Edit task"
+            android:src="@android:drawable/ic_menu_edit"
+            app:tint="#1976D2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/buttonDeleteTask"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/buttonDeleteTask"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="2dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/delete_task"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="#D32F2F"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

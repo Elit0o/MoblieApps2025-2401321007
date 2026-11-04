@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.BotOps" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#3F51B5</item>
+        <item name="colorSecondary">#2E7D32</item>
+        <item name="android:windowBackground">#F8F9FA</item>
+        <item name="colorSurface">#FFFFFF</item>
+    </style>
+
+    <style name="Theme.BotOps" parent="Base.Theme.BotOps" />
+</resources>
