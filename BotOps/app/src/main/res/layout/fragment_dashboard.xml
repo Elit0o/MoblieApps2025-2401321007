@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?attr/colorSurface"
     tools:context=".ui.dashboard.DashboardFragment">
 
     <ScrollView
@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Fleet Dashboard"
-                android:textColor="#212121"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -31,7 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Real-time status and operational metrics"
-                android:textColor="#757575"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp" />
 
             <!-- Metrics Grid / Cards -->
@@ -51,7 +51,7 @@
                     android:layout_margin="6dp"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="3dp"
-                    app:strokeColor="#E0E0E0"
+                    app:strokeColor="?attr/colorOutline"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -64,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Total Robots"
-                            android:textColor="#616161"
+                            android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -73,7 +73,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:textColor="#1976D2"
+                            android:textColor="?attr/colorPrimary"
                             android:textSize="28sp"
                             android:textStyle="bold"
                             tools:text="12" />
@@ -89,7 +89,7 @@
                     android:layout_margin="6dp"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="3dp"
-                    app:strokeColor="#E0E0E0"
+                    app:strokeColor="?attr/colorOutline"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -102,7 +102,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Active / Idle"
-                            android:textColor="#616161"
+                            android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -127,7 +127,7 @@
                     android:layout_margin="6dp"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="3dp"
-                    app:strokeColor="#E0E0E0"
+                    app:strokeColor="?attr/colorOutline"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -140,7 +140,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Active / Pending"
-                            android:textColor="#616161"
+                            android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -165,7 +165,7 @@
                     android:layout_margin="6dp"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="3dp"
-                    app:strokeColor="#E0E0E0"
+                    app:strokeColor="?attr/colorOutline"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -178,7 +178,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Low Battery (&lt;20%)"
-                            android:textColor="#616161"
+                            android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="13sp"
                             android:textStyle="bold" />
 
@@ -205,7 +205,7 @@
                 android:layout_marginTop="12dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="3dp"
-                app:strokeColor="#E0E0E0"
+                app:strokeColor="?attr/colorOutline"
                 app:strokeWidth="1dp">
 
                 <LinearLayout
@@ -218,7 +218,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Active Fleet Operations &amp; Live Tasks"
-                        android:textColor="#212121"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -228,7 +228,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="No robots currently executing tasks."
-                        android:textColor="#555555"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
 
                 </LinearLayout>
@@ -240,7 +240,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="Quick Actions"
-                android:textColor="#212121"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 

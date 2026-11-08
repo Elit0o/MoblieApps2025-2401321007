@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,7 +19,8 @@
                 android:id="@+id/inputWaypointName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textCapWords" />
+                android:inputType="textCapWords"
+                android:textColor="?attr/colorOnSurface" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -26,6 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Select Zone:"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -50,7 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="220dp"
             android:layout_marginTop="8dp"
-            android:background="#FAFAFA" />
+            android:background="?attr/colorSurfaceVariant" />
 
         <TextView
             android:id="@+id/textSelectedCoords"
@@ -58,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Selected: X: 50.0, Y: 50.0"
-            android:textColor="#333333"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"
             android:textStyle="bold" />
 

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?attr/colorSurface"
     tools:context=".ui.settings.SettingsFragment">
 
     <LinearLayout
@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Settings"
-            android:textColor="#212121"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Customize your application preferences"
-            android:textColor="#757575"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp" />
 
         <!-- Appearance Card -->
@@ -36,7 +36,7 @@
             android:layout_marginTop="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="3dp"
-            app:strokeColor="#E0E0E0"
+            app:strokeColor="?attr/colorOutline"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -49,7 +49,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Appearance"
-                    android:textColor="#1976D2"
+                    android:textColor="?attr/colorPrimary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -58,7 +58,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Switch between Light and Dark themes"
-                    android:textColor="#757575"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="13sp" />
 
                 <LinearLayout
@@ -73,7 +73,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Dark Mode"
-                        android:textColor="#212121"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -94,7 +94,7 @@
             android:layout_marginTop="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="3dp"
-            app:strokeColor="#E0E0E0"
+            app:strokeColor="?attr/colorOutline"
             app:strokeWidth="1dp">
 
             <LinearLayout
@@ -107,7 +107,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="About BotOps"
-                    android:textColor="#1976D2"
+                    android:textColor="?attr/colorPrimary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -116,7 +116,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:text="BotOps Fleet Management v1.0\nOffline-First Architecture with Room &amp; Firebase Firestore."
-                    android:textColor="#555555"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
 
             </LinearLayout>
